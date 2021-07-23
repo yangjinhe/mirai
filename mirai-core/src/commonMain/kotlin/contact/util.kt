@@ -13,10 +13,8 @@ package net.mamoe.mirai.internal.contact
 
 import net.mamoe.mirai.Bot
 import net.mamoe.mirai.contact.*
-import net.mamoe.mirai.event.events.*
 import net.mamoe.mirai.internal.message.LongMessageInternal
 import net.mamoe.mirai.internal.utils.estimateLength
-import net.mamoe.mirai.message.*
 import net.mamoe.mirai.message.data.*
 import net.mamoe.mirai.utils.cast
 import net.mamoe.mirai.utils.castOrNull
@@ -62,16 +60,32 @@ internal fun net.mamoe.mirai.event.events.MessageEvent.logMessageReceived() {
         return "[${group.name}(${group.id})] ${senderName}($displayId) -> ${renderMessage(message)}"
     }
 
+    fun renderGroupMessageSync(group: Group, message: MessageChain): String {
+        return "[${group.name}(${group.id})][SYNC] <- ${renderMessage(message)}"
+    }
+
     fun renderGroupTempMessage(group: Group, senderName: String, sender: Member, message: MessageChain): String {
         return "[${group.name}(${group.id})] $senderName(Temp ${sender.id}) -> ${renderMessage(message)}"
+    }
+
+    fun renderGroupTempMessageSync(group: Group, subjectName: String, subject: Member, message: MessageChain): String {
+        return "[${group.name}(${group.id})] $subjectName(Temp ${subject.id})[SYNC] <- ${renderMessage(message)}"
     }
 
     fun renderStrangerMessage(senderName: String, sender: User, message: MessageChain): String {
         return "[$senderName(Stranger ${sender.id}) -> ${renderMessage(message)}"
     }
 
+    fun renderStrangerMessageSync(subjectName: String, subject: User, message: MessageChain): String {
+        return "[$subjectName(Stranger ${subject.id})[SYNC] <- ${renderMessage(message)}"
+    }
+
     fun renderFriendMessage(sender: User, message: MessageChain): String {
         return "${sender.nick}(${sender.id}) -> ${renderMessage(message)}"
+    }
+
+    fun renderFriendMessageSync(subject: User, message: MessageChain): String {
+        return "${subject.nick}(${subject.id})[SYNC] <- ${renderMessage(message)}"
     }
 
     fun renderOtherClientMessage(client: OtherClient): String {
@@ -84,20 +98,22 @@ internal fun net.mamoe.mirai.event.events.MessageEvent.logMessageReceived() {
             is net.mamoe.mirai.event.events.GroupMessageEvent ->
                 renderGroupMessage(group, senderName, sender, message)
             is net.mamoe.mirai.event.events.GroupMessageSyncEvent ->
-                renderGroupMessage(group, senderName, sender, message)
+                renderGroupMessageSync(group, message)
 
             is net.mamoe.mirai.event.events.GroupTempMessageEvent ->
                 renderGroupTempMessage(group, senderName, sender, message)
             is net.mamoe.mirai.event.events.GroupTempMessageSyncEvent ->
-                renderGroupTempMessage(group, senderName, sender, message)
+                renderGroupTempMessageSync(group, subject.nameCardOrNick, subject, message)
 
-            is net.mamoe.mirai.event.events.StrangerMessageEvent,
-            is net.mamoe.mirai.event.events.StrangerMessageSyncEvent ->
+            is net.mamoe.mirai.event.events.StrangerMessageEvent ->
                 renderStrangerMessage(senderName, sender, message)
+            is net.mamoe.mirai.event.events.StrangerMessageSyncEvent ->
+                renderStrangerMessageSync(subject.nick, subject, message)
 
-            is net.mamoe.mirai.event.events.FriendMessageEvent,
-            is net.mamoe.mirai.event.events.FriendMessageSyncEvent ->
+            is net.mamoe.mirai.event.events.FriendMessageEvent ->
                 renderFriendMessage(sender, message)
+            is net.mamoe.mirai.event.events.FriendMessageSyncEvent ->
+                renderFriendMessageSync(subject, message)
 
             is net.mamoe.mirai.event.events.OtherClientMessageEvent ->
                 renderOtherClientMessage(client)
